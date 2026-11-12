@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\LoginRequest;
+use App\Http\Requests\Api\RefreshTokenRequest;
 use App\Http\Requests\Api\RegisterRequest;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
@@ -22,6 +27,22 @@ class AuthController extends Controller
             'message' => 'Tạo tài khoản thành công. Hãy đăng nhập để nhận token.',
             'user' => $user,
         ], 201);
+    }
+
+    public function login(
+        LoginRequest $request,
+        ServerRequestInterface $psrRequest,
+        ResponseInterface $psrResponse,
+    ): Response {
+        return $this->authService->login($psrRequest, $psrResponse);
+    }
+
+    public function refresh(
+        RefreshTokenRequest $request,
+        ServerRequestInterface $psrRequest,
+        ResponseInterface $psrResponse,
+    ): Response {
+        return $this->authService->refresh($psrRequest, $psrResponse);
     }
 
     public function logout(Request $request): JsonResponse

@@ -59,10 +59,9 @@ Nếu muốn dùng SQLite, tạo file `database/database.sqlite` trước khi mi
 
 ### 2. Đăng nhập và nhận token
 
-Passport đã đăng ký endpoint OAuth `POST /oauth/token`. Gửi `application/x-www-form-urlencoded`:
+Gửi `POST /api/auth/login` với kiểu `application/x-www-form-urlencoded` (Postman: **Body → x-www-form-urlencoded**):
 
 ```text
-grant_type=password
 client_id=<PASSPORT_CLIENT_ID>
 client_secret=<PASSPORT_CLIENT_SECRET>
 username=a@example.com
@@ -70,7 +69,7 @@ password=secret1234
 scope=
 ```
 
-Phản hồi có `access_token`, `refresh_token` và `expires_in`. Gửi access token trong header:
+Controller chuyển request cho Passport và chọn Password Grant. Phản hồi có `access_token`, `refresh_token` và `expires_in`. Gửi access token trong header:
 
 ```text
 Authorization: Bearer <access_token>
@@ -86,30 +85,31 @@ Authorization: Bearer <access_token>
 
 ### 5. Refresh access token
 
-Gửi form đến `POST /oauth/token`:
+Gửi `POST /api/auth/refresh` với kiểu `application/x-www-form-urlencoded`:
 
 ```text
-grant_type=refresh_token
 refresh_token=<refresh_token>
 client_id=<PASSPORT_CLIENT_ID>
 client_secret=<PASSPORT_CLIENT_SECRET>
 scope=
 ```
 
-Passport trả về bộ token mới. Dùng refresh token mới mà phản hồi trả về cho lần tiếp theo.
+Controller chuyển request cho Passport và chọn Refresh Token Grant. Passport trả về bộ token mới. Dùng refresh token mới mà phản hồi trả về cho lần tiếp theo.
+
+Passport vẫn cung cấp endpoint OAuth gốc `POST /oauth/token`, nhận trường `grant_type=password` hoặc `grant_type=refresh_token` nếu muốn gọi trực tiếp.
 
 ## Đọc code theo luồng
 
 1. `routes/api.php`: URL gọi controller nào; các URL trong nhóm `auth:api` cần token.
 2. `app/Http/Requests/Api/RegisterRequest.php`: chỉ chứa quyền cho phép và quy tắc validate đăng ký.
-3. `app/Http/Controllers/Api/AuthController.php`: nhận request, gọi service, định dạng JSON response.
-4. `app/Services/AuthService.php`: điều phối đăng ký và xử lý đăng xuất.
-5. `app/Repositories/Contracts/UserRepositoryInterface.php`: quy định thao tác dữ liệu mà service cần.
-6. `app/Repositories/EloquentUserRepository.php`: thực hiện thao tác đó bằng Eloquent và model `User`.
-7. `app/Providers/AppServiceProvider.php`: nối interface với Eloquent repository trong Laravel container.
-8. `app/Models/User.php`: `HasApiTokens` nối user với token Passport; `OAuthenticatable` cho Passport biết User là model đăng nhập được.
-9. `config/auth.php`: guard `api` dùng driver `passport` để xác minh Bearer token.
-10. `/oauth/token`: endpoint do Passport cung cấp; `grant_type` quyết định đây là đăng nhập hay refresh.
+3. `app/Http/Requests/Api/LoginRequest.php` và `RefreshTokenRequest.php`: validate riêng dữ liệu đăng nhập và refresh.
+4. `app/Http/Controllers/Api/AuthController.php`: nhận request và chuyển tác vụ cho service.
+5. `app/Services/AuthService.php`: điều phối đăng ký, đăng xuất, login và refresh; chuyển yêu cầu cấp token cho Passport.
+6. `app/Repositories/Contracts/UserRepositoryInterface.php`: quy định thao tác dữ liệu mà service cần.
+7. `app/Repositories/EloquentUserRepository.php`: thực hiện thao tác đó bằng Eloquent và model `User`.
+8. `app/Providers/AppServiceProvider.php`: nối interface với Eloquent repository trong Laravel container và bật Password Grant.
+9. `app/Models/User.php`: `HasApiTokens` nối user với token Passport; `OAuthenticatable` cho Passport biết User là model đăng nhập được.
+10. `config/auth.php`: guard `api` dùng driver `passport` để xác minh Bearer token.
 
 Tóm tắt luồng đăng ký: `RegisterRequest → AuthController → AuthService → UserRepositoryInterface → EloquentUserRepository → User`.
 
