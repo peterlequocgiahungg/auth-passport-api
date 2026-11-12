@@ -9,7 +9,6 @@ use App\Http\Requests\Api\RegisterRequest;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Laravel\Passport\Http\Controllers\AccessTokenController as PassportAccessTokenController;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,18 +33,16 @@ class AuthController extends Controller
         LoginRequest $request,
         ServerRequestInterface $psrRequest,
         ResponseInterface $psrResponse,
-        PassportAccessTokenController $passport,
     ): Response {
-        return $this->issueToken($psrRequest, $psrResponse, $passport, 'password');
+        return $this->authService->login($psrRequest, $psrResponse);
     }
 
     public function refresh(
         RefreshTokenRequest $request,
         ServerRequestInterface $psrRequest,
         ResponseInterface $psrResponse,
-        PassportAccessTokenController $passport,
     ): Response {
-        return $this->issueToken($psrRequest, $psrResponse, $passport, 'refresh_token');
+        return $this->authService->refresh($psrRequest, $psrResponse);
     }
 
     public function logout(Request $request): JsonResponse
@@ -58,20 +55,5 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         return response()->json(['user' => $request->user()]);
-    }
-
-    private function issueToken(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        PassportAccessTokenController $passport,
-        string $grantType,
-    ): Response {
-        $body = $request->getParsedBody();
-        $body = is_array($body) ? $body : [];
-
-        return $passport->issueToken(
-            $request->withParsedBody([...$body, 'grant_type' => $grantType]),
-            $response,
-        );
     }
 }

@@ -103,8 +103,8 @@ Passport vẫn cung cấp endpoint OAuth gốc `POST /oauth/token`, nhận trư�
 1. `routes/api.php`: URL gọi controller nào; các URL trong nhóm `auth:api` cần token.
 2. `app/Http/Requests/Api/RegisterRequest.php`: chỉ chứa quyền cho phép và quy tắc validate đăng ký.
 3. `app/Http/Requests/Api/LoginRequest.php` và `RefreshTokenRequest.php`: validate riêng dữ liệu đăng nhập và refresh.
-4. `app/Http/Controllers/Api/AuthController.php`: nhận request; Passport xử lý xác thực và token.
-5. `app/Services/AuthService.php`: điều phối đăng ký và xử lý đăng xuất.
+4. `app/Http/Controllers/Api/AuthController.php`: nhận request và chuyển tác vụ cho service.
+5. `app/Services/AuthService.php`: điều phối đăng ký, đăng xuất, login và refresh; chuyển yêu cầu cấp token cho Passport.
 6. `app/Repositories/Contracts/UserRepositoryInterface.php`: quy định thao tác dữ liệu mà service cần.
 7. `app/Repositories/EloquentUserRepository.php`: thực hiện thao tác đó bằng Eloquent và model `User`.
 8. `app/Providers/AppServiceProvider.php`: nối interface với Eloquent repository trong Laravel container và bật Password Grant.
