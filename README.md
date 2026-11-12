@@ -59,7 +59,7 @@ Nếu muốn dùng SQLite, tạo file `database/database.sqlite` trước khi mi
 
 ### 2. Đăng nhập và nhận token
 
-Passport đã đăng ký endpoint OAuth `POST /oauth/token`. Gửi `application/x-www-form-urlencoded`:
+Trong project này, login dùng endpoint OAuth chuẩn do Passport cung cấp, không tạo thêm một route login riêng trong `AuthController`. Nhờ vậy Passport chịu trách nhiệm xác thực thông tin đăng nhập và phát hành đúng cặp access/refresh token. Gửi `POST /oauth/token` với kiểu `application/x-www-form-urlencoded` (Postman: **Body → x-www-form-urlencoded**):
 
 ```text
 grant_type=password
@@ -86,7 +86,7 @@ Authorization: Bearer <access_token>
 
 ### 5. Refresh access token
 
-Gửi form đến `POST /oauth/token`:
+Refresh cũng dùng `POST /oauth/token`; đổi `grant_type` thành `refresh_token` và gửi refresh token đang có:
 
 ```text
 grant_type=refresh_token
