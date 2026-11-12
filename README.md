@@ -55,7 +55,7 @@ Nếu muốn dùng SQLite, tạo file `database/database.sqlite` trước khi mi
 }
 ```
 
-Controller kiểm tra dữ liệu, rồi tạo user. Model `User` tự băm password nhờ cast `hashed`.
+`RegisterRequest` kiểm tra dữ liệu trước khi controller chạy. Sau đó service gọi repository để lưu user. Model `User` tự băm password nhờ cast `hashed`.
 
 ### 2. Đăng nhập và nhận token
 
@@ -101,11 +101,17 @@ Passport trả về bộ token mới. Dùng refresh token mới mà phản hồi
 ## Đọc code theo luồng
 
 1. `routes/api.php`: URL gọi controller nào; các URL trong nhóm `auth:api` cần token.
-2. `app/Http/Controllers/Api/AuthController.php`: validate đăng ký, trả user, thu hồi token khi logout.
-3. `app/Models/User.php`: `HasApiTokens` nối user với token Passport; `OAuthenticatable` cho Passport biết User là model đăng nhập được.
-4. `config/auth.php`: guard `api` dùng driver `passport` để xác minh Bearer token.
-5. `app/Providers/AppServiceProvider.php`: bật Password Grant cho mục đích học tập.
-6. `/oauth/token`: endpoint do Passport cung cấp; `grant_type` quyết định đây là đăng nhập hay refresh.
+2. `app/Http/Requests/Api/RegisterRequest.php`: chỉ chứa quyền cho phép và quy tắc validate đăng ký.
+3. `app/Http/Controllers/Api/AuthController.php`: nhận request, gọi service, định dạng JSON response.
+4. `app/Services/AuthService.php`: điều phối đăng ký và xử lý đăng xuất.
+5. `app/Repositories/Contracts/UserRepositoryInterface.php`: quy định thao tác dữ liệu mà service cần.
+6. `app/Repositories/EloquentUserRepository.php`: thực hiện thao tác đó bằng Eloquent và model `User`.
+7. `app/Providers/AppServiceProvider.php`: nối interface với Eloquent repository trong Laravel container.
+8. `app/Models/User.php`: `HasApiTokens` nối user với token Passport; `OAuthenticatable` cho Passport biết User là model đăng nhập được.
+9. `config/auth.php`: guard `api` dùng driver `passport` để xác minh Bearer token.
+10. `/oauth/token`: endpoint do Passport cung cấp; `grant_type` quyết định đây là đăng nhập hay refresh.
+
+Tóm tắt luồng đăng ký: `RegisterRequest → AuthController → AuthService → UserRepositoryInterface → EloquentUserRepository → User`.
 
 ## Không commit
 
